@@ -1,0 +1,71 @@
+def euclidean_distance(x1, x2):
+  """ Calculates the euclidean distance between two vectors a and b in the 2D space represented as lists """
+  
+  distance = ((x1[0]-x2[0])**2+(x1[1]-x2[1])**2)**0.5
+  return distance
+  
+def nearest_neighbor(xi, x_t, y_t, k) :
+  """ Calculates the euclidean distance for a certain data point of index i in the dataframe df and finds the k nearest neighbors,
+  then returns Stressed or Not Stressed depending on the number of neighbors from the classes Stressed/Not Stressed """
+
+  stressed_count = 0
+  notstressed_count = 0
+  distance = [] #this list will contain every single euclidean distance from the point we're using to all the other data points in the dataset
+
+  for index in range(len(x_t)) : #we iterate over the whole dataframe that contains our data points
+    if (xi[0]!=x_t[index][0] or xi[1]!=x_t[index][1]) :
+      val_dist = (euclidean_distance([xi[0], xi[1]], [x_t[index][0], x_t[index][1]])) # the iteration is done for every point in the dataset except the one we use to find its neighbors 
+      distance.append([val_dist,y_t[index][0]]) 
+  distance.sort()
+  distance = distance[:k]
+
+  for j in range(k) : #We only take the k nearest neighbors 
+    if distance[j][1] == 0 : #if the old index (that's in sort_index) is less than 199 then the data point is in the not stressed class
+      notstressed_count += 1
+    else : #otherwise it's in the Stressed class
+      stressed_count += 1
+    
+  if stressed_count > notstressed_count : #if most points are from the class Stressed we return Stressed
+    return 1
+  else : #otherwise we return Not Stressed
+    return 0
+    
+ def knn(x, x_t, y_t, k) : 
+  """ For every point in the dataframe, we apply the nearest_neighbor function to classify the point and then return
+  the balanced accuracy and print the confusion matrix values  """
+  y_hat =[]
+  for i in range(len(x)) : #for every point that is originally in the Not Stressed class, we find the k nearest neighbors
+    y_hat.append(nearest_neighbor(x[i], x_t, y_t, k))
+  return y_hat
+
+def performance_knn(x, y, x_t, y_t, k) :
+  tp = 0 #True positives
+  tn = 0 #True negatives
+  fp = 0 #False positives
+  fn = 0 #False negatives
+  recall = 0
+  specificity = 0
+  balanced_accuracy = 0
+  precision = 0
+  F1=0
+  for i in range(len(x)) : #for every point that is originally in the Not Stressed class, we find the k nearest neighbors
+    result = nearest_neighbor(x[i], x_t, y_t, k)
+    if (result == 0 and  y[i][0]==0): #if the result is Not Stressed, than this is a true negative
+      tn += 1 
+
+    elif (result == 1 and  y[i][0]==0): 
+      fp += 1 #otherwise the result is a false positive
+
+    elif (result == 1 and  y[i][0]==1) : 
+      tp += 1 #if the result is Stressed, than this is a true positive
+
+    elif (result == 0 and y[i][0]==1) : 
+      fn += 1 #otherwise
+ 
+  #print("knn for k equal to : " + str(k) + '. ' + 'TP : ' + str(tp) + ' TN : ' + str(tn) + ' FP : ' + str(fp) + ' FN : ' + str(fn) )
+  recall = tp / (tp + fn)
+  specificity = tn / (fp + tn)
+  balanced_accuracy = (recall + specificity) / 2
+  precision = tp / (tp + fp)
+  F1 = (2*precision*recall) / (precision + recall)
+  return balanced_accuracy, precision, recall, F1
